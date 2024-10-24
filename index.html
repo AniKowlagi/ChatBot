@@ -355,7 +355,7 @@
                 const aiResponse = data.choices[0].message.content;
                 addMessageToChat('AI', aiResponse);
             } catch (error) {
-                addMessageToChat('AI', "Tartar sauce! Something went wrong! Try again, please!");
+                addMessageToChat('AI', "Something went wrong! Try again, please!");
                 console.error('Error:', error);
             } finally {
                 loadingIndicator.style.display = 'none';
