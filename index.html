@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpongeBob's Underwater Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(180deg, #1ca3ec 0%, #0f5e8c 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @keyframes floatingBubbles {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .bubble {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .title {
+            text-align: center;
+            color: #f7d51d;
+            text-shadow: 2px 2px #d95e16, 4px 4px 8px rgba(0,0,0,0.4);
+            font-size: 3em;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .chat-interface {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 2px solid #f7d51d;
+            margin-bottom: 20px;
+        }
+
+        #chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: auto;
+            color: #1565c0;
+        }
+
+        .ai-message {
+            background-color: #fff3e0;
+            margin-right: auto;
+            color: #e65100;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #f7d51d;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #d95e16;
+            box-shadow: 0 0 10px rgba(217, 94, 22, 0.3);
+        }
+
+        button {
+            background-color: #f7d51d;
+            color: #d95e16;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #ffe44d;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .sand {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(180deg, #f4d03f 0%, #e0c020 100%);
+            z-index: 1;
+        }
+
+        .spongebob-container {
+            width: 150px;
+            height: 200px;
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            z-index: 1;
+            border: 3px solid #f7d51d;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .spongebob-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading::after {
+            content: "🐟";
+            animation: swim 1s infinite;
+        }
+
+        @keyframes swim {
+            0% { transform: translateX(-20px) rotate(0deg); }
+            50% { transform: translateX(20px) rotate(10deg); }
+            100% { transform: translateX(-20px) rotate(0deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="bubbles"></div>
+    <div class="sand"></div>
+    <div class="spongebob-container">
+        <img id="spongebob-image" src="path/to/your/spongebob1.jpg" alt="SpongeBob">
+    </div>
+
+    <div class="container">
+        <h1 class="title">SpongeBob's Chatbot</h1>
+
+        <div class="chat-interface">
+            <div class="input-container">
+                <input type="password" id="api-key-input" placeholder="Enter your OpenAI API key">
+                <button id="test-api-key">Test API Key</button>
+            </div>
+
+            <div id="chat-messages"></div>
+            
+            <div class="loading" id="loading">Swimming to get your response...</div>
+
+            <div class="input-container">
+                <input type="text" id="message-input" placeholder="Type your message...">
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function createBubbles() {
+            const bubblesContainer = document.getElementById('bubbles');
+            const numberOfBubbles = 50;
+
+            for (let i = 0; i < numberOfBubbles; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                
+                const size = Math.random() * 30 + 10;
+                const left = Math.random() * 100;
+                const duration = Math.random() * 10 + 5;
+                const delay = Math.random() * 5;
+                
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${left}%`;
+                bubble.style.bottom = '-20px';
+                bubble.style.animation = `floatingBubbles ${duration}s linear ${delay}s infinite`;
+                
+                bubblesContainer.appendChild(bubble);
+            }
+        }
+
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const testApiKeyButton = document.getElementById('test-api-key');
+        const loadingIndicator = document.getElementById('loading');
+
+        // Array of SpongeBob image paths
+        const spongebobImages = [
+            'ChatBot/1.png',
+            'ChatBot/2.jpg',
+            'ChatBot/3.jpg',
+            'ChatBot/4.jpg'
+        ];
+
+        // Function to change SpongeBob image
+        function changeSpongeBobImage() {
+            const img = document.getElementById('spongebob-image');
+            const randomIndex = Math.floor(Math.random() * spongebobImages.length);
+            img.style.opacity = '0';
+            
+            setTimeout(() => {
+                img.src = spongebobImages[randomIndex];
+                img.style.opacity = '1';
+            }, 300);
+        }
+
+        createBubbles();
+
+        function addMessageToChat(sender, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender === 'User' ? 'user-message' : 'ai-message'}`;
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Welcome message
+        addMessageToChat('AI', "Hi! I'm SpongeBob! Ask me any curious questions. Are ya ready? ");
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        testApiKeyButton.addEventListener('click', testApiKey);
+
+        // Test API key
+        async function testApiKey() {
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                alert('Enter an API key first!');
+                return;
+            }
+
+            try {
+                const response = await fetch('https://api.openai.com/v1/models', {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert("Your API key works, type something to get going!");
+                } else {
+                    alert('That API key doesn\'t seem to work!');
+                }
+            } catch (error) {
+                alert('Something went wrong testing the API key!');
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            const apiKey = apiKeyInput.value.trim();
+
+            if (!message) return;
+            if (!apiKey) {
+                alert('Oh barnacles! Please enter an API key first!');
+                return;
+            }
+
+            // Change SpongeBob image when message is sent
+            changeSpongeBobImage();
+
+            addMessageToChat('User', message);
+            messageInput.value = '';
+            loadingIndicator.style.display = 'block';
+
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-3.5-turbo",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are SpongeBob SquarePants. Respond in his cheerful, optimistic style using his catchphrases and mannerisms. Make references to Krusty Krab, Patrick, Squidward, Mr. Krabs, and other characters. Keep responses fun and silly!"
+                            },
+                            {
+                                role: "user",
+                                content: message
+                            }
+                        ],
+                        temperature: 0.8
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+                addMessageToChat('AI', aiResponse);
+            } catch (error) {
+                addMessageToChat('AI', "Tartar sauce! Something went wrong! Try again, please!");
+                console.error('Error:', error);
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
