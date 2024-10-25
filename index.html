@@ -10,18 +10,18 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+        /* sets up the styling of the chatbot*/
         body {
             font-family: 'Comic Sans MS', cursive, sans-serif;
             background: linear-gradient(180deg, #1ca3ec 0%, #0f5e8c 100%);
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; 
             padding: 20px;
             position: relative;
             overflow-x: hidden;
         }
-
+        /* bubble background functionality :)*/
         @keyframes floatingBubbles {
             0% { transform: translateY(0) rotate(0deg); opacity: 0; }
             50% { opacity: 0.8; }
@@ -50,9 +50,10 @@
             text-shadow: 2px 2px #d95e16, 4px 4px 8px rgba(0,0,0,0.4);
             font-size: 3em;
             margin-bottom: 30px;
-            font-weight: bold;
+            font-weight:
+             bold;
         }
-
+        /* styling of the chatbot interface*/
         .chat-interface {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -68,7 +69,7 @@
             margin-bottom: 20px;
             padding: 10px;
         }
-
+        /* display text  box*/
         .message {
             margin-bottom: 15px;
             padding: 10px 15px;
@@ -196,7 +197,8 @@
 
         <div class="chat-interface">
             <div class="input-container">
-                <input type="password" id="api-key-input" placeholder="Enter your GROQ API key">
+                <!--asks for the GROQ API KEY -->
+                <input type="password" id="api-key-input" placeholder="Enter your GROQ API key"> 
                 <button id="test-api-key">Test API Key</button>
             </div>
 
@@ -212,6 +214,7 @@
     </div>
 
     <script>
+        /*bubble functionality() makes bubbles at random*/
         function createBubbles() {
             const bubblesContainer = document.getElementById('bubbles');
             const numberOfBubbles = 50;
@@ -242,6 +245,7 @@
         const testApiKeyButton = document.getElementById('test-api-key');
         const loadingIndicator = document.getElementById('loading');
 
+        /* cycles between a list of spongebob images*/
         const spongebobImages = [
             '1.png',
             '2.jpg',
@@ -284,6 +288,7 @@
             loadingIndicator.style.display = 'block'; 
 
             try {
+                /* checks the entered API key and gets it from GROQ*/
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -300,7 +305,7 @@
                     })
                 });
 
-                console.log("API request response status:", response.status);
+                console.log("API request response status:", response.status); /*debugging lol*/
 
                 if (response.ok) {
                     const data = await response.json();
@@ -310,16 +315,17 @@
                 } else {
                     const errorData = await response.json();
                     console.error('API error:', errorData);
-                    addMessageToChat('ai', 'Sorry, there was an error processing your request.');
+                    addMessageToChat('ai', 'Sorry, there was an error processing your request.'); /*checks and catches for errors*/
                 }
             } catch (error) {
-                console.error('Error during message send:', error);
+                console.error('Error during message send:', error); /*checks and catches for errors*/
                 addMessageToChat('ai', 'Sorry, there was an error sending your message.');
             } finally {
                 loadingIndicator.style.display = 'none'; 
             }
         }
 
+        /*checks and for clicks or key presses*/
         sendButton.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
@@ -331,11 +337,11 @@
             const apiKey = apiKeyInput.value.trim();
 
             if (!apiKey) {
-                alert('Please enter your API key.');
+                alert('Please enter your API key.'); /*input for API key*/
                 return;
             }
 
-            try {
+            try { 
                 const response = await fetch('https://api.groq.com/openai/v1/models', {
                     method: 'GET',
                     headers: {
@@ -344,7 +350,7 @@
                     }
                 });
 
-                console.log("API key test response status:", response.status);
+                console.log("API key test response status:", response.status); /*debugging lol*/
 
                 if (response.ok) {
                     alert('API key is valid!');
