@@ -10,7 +10,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        /* sets up the styling of the chatbot*/
+
         body {
             font-family: 'Comic Sans MS', cursive, sans-serif;
             background: linear-gradient(180deg, #1ca3ec 0%, #0f5e8c 100%);
@@ -21,7 +21,7 @@
             position: relative;
             overflow-x: hidden;
         }
-        /* bubble background functionality :)*/
+
         @keyframes floatingBubbles {
             0% { transform: translateY(0) rotate(0deg); opacity: 0; }
             50% { opacity: 0.8; }
@@ -50,10 +50,9 @@
             text-shadow: 2px 2px #d95e16, 4px 4px 8px rgba(0,0,0,0.4);
             font-size: 2em;
             margin-bottom: 30px;
-            font-weight:
-             bold;
+            font-weight: bold;
         }
-        /* styling of the chatbot interface*/
+
         .chat-interface {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -69,7 +68,7 @@
             margin-bottom: 20px;
             padding: 10px;
         }
-        /* display text  box*/
+
         .message {
             margin-bottom: 15px;
             padding: 10px 15px;
@@ -99,6 +98,47 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+        }
+
+        .voice-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .record-button {
+            background-color: #f7d51d;
+            color: #d95e16;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.2s ease;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .record-button.recording {
+            background-color: #ff4444;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .record-status {
+            color: #d95e16;
+            font-size: 0.9em;
+            margin-left: 10px;
+            align-self: center;
         }
 
         input {
@@ -174,7 +214,7 @@
         }
 
         .loading::after {
-            content: "searching";
+            content: "hi";
             animation: swim 1s infinite;
         }
 
@@ -200,14 +240,18 @@
 
         <div class="chat-interface">
             <div class="input-container">
-                <!--asks for the GROQ API KEY -->
-                <input type="password" id="api-key-input" placeholder="Enter your GROQ API key"> 
+                <input type="password" id="api-key-input" placeholder="Enter your GROQ API key">
                 <button id="test-api-key">Test API Key</button>
             </div>
 
             <div id="chat-messages"></div>
             
             <div class="loading" id="loading">Swimming to get your response...</div>
+
+            <div class="voice-input-container">
+                <button id="record-button" class="record-button">🎤</button>
+                <span id="record-status" class="record-status"></span>
+            </div>
 
             <div class="input-container">
                 <input type="text" id="message-input" placeholder="Type your message...">
@@ -217,7 +261,6 @@
     </div>
 
     <script>
-        /*bubble functionality() makes bubbles at random*/
         function createBubbles() {
             const bubblesContainer = document.getElementById('bubbles');
             const numberOfBubbles = 50;
@@ -248,13 +291,18 @@
         const testApiKeyButton = document.getElementById('test-api-key');
         const loadingIndicator = document.getElementById('loading');
 
-        /* cycles between a list of spongebob images*/
         const spongebobImages = [
             '1.png',
             '2.jpg',
             '3.jpg',
             '4.png'
         ];
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        const recordButton = document.getElementById('record-button');
+        const recordStatus = document.getElementById('record-status');
 
         function changeSpongeBobImage() {
             const img = document.getElementById('spongebob-image');
@@ -274,7 +322,7 @@
             messageDiv.className = `message ${sender}-message`;
             messageDiv.innerText = message;
             chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight; 
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         async function sendMessage() {
@@ -287,11 +335,10 @@
             }
 
             addMessageToChat('user', userMessage);
-            messageInput.value = ''; 
-            loadingIndicator.style.display = 'block'; 
+            messageInput.value = '';
+            loadingIndicator.style.display = 'block';
 
             try {
-                /* checks the entered API key and gets it from GROQ*/
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -299,16 +346,13 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        model: 'llama3-8b-8192', 
+                        model: 'llama3-8b-8192',
                         messages: [
                             { role: "system", content: "You are SpongeBob SquarePants. Respond in his cheerful, optimistic style using his catchphrases and mannerisms. Keep responses within 1-2 sentences. For every new message, try to start the sentence differently" },
                             { role: "user", content: userMessage }
                         ]
-
                     })
                 });
-
-                console.log("API request response status:", response.status); /*debugging lol*/
 
                 if (response.ok) {
                     const data = await response.json();
@@ -318,17 +362,87 @@
                 } else {
                     const errorData = await response.json();
                     console.error('API error:', errorData);
-                    addMessageToChat('ai', 'Sorry, there was an error processing your request.'); /*checks and catches for errors*/
+                    addMessageToChat('ai', 'Sorry, there was an error processing your request.');
                 }
             } catch (error) {
-                console.error('Error during message send:', error); /*checks and catches for errors*/
+                console.error('Error during message send:', error);
                 addMessageToChat('ai', 'Sorry, there was an error sending your message.');
             } finally {
-                loadingIndicator.style.display = 'none'; 
+                loadingIndicator.style.display = 'none';
             }
         }
 
-        /*checks and for clicks or key presses*/
+        async function setupVoiceRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    await processAudio(audioBlob);
+                    audioChunks = [];
+                };
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                alert('Unable to access microphone. Please check your permissions.');
+            }
+        }
+
+        async function processAudio(audioBlob) {
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                alert('Please enter your API key.');
+                return;
+            }
+
+            recordStatus.textContent = 'Processing audio...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'audio.wav');
+                formData.append('model', 'distil-whisper-large-v3-en');
+
+                const transcriptionResponse = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: formData
+                });
+
+                if (transcriptionResponse.ok) {
+                    const transcriptionData = await transcriptionResponse.json();
+                    const transcribedText = transcriptionData.text;
+                    messageInput.value = transcribedText;
+                    recordStatus.textContent = 'Transcribed! Send your message.';
+                } else {
+                    throw new Error('Transcription failed');
+                }
+            } catch (error) {
+                console.error('Error processing audio:', error);
+                recordStatus.textContent = 'Error processing audio';
+            }
+        }
+
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                audioChunks = [];
+                mediaRecorder.start();
+                isRecording = true;
+                recordButton.classList.add('recording');
+                recordStatus.textContent = 'Recording... Click to stop';
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordButton.classList.remove('recording');
+                recordStatus.textContent = 'Processing...';
+            }
+        });
+
         sendButton.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
@@ -336,7 +450,7 @@
             }
         });
 
-        testApiKeyButton.addEventListener('click', async () => {
+        testApiKeyButton.addEventListener('click', async ()=> {
             const apiKey = apiKeyInput.value.trim();
 
             if (!apiKey) {
