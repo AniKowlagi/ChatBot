@@ -299,7 +299,7 @@
                     body: JSON.stringify({
                         model: 'llama3-8b-8192',
                         messages: [
-                            { role: "system", content: "You are SpongeBob SquarePants, speak like SpongeBob" },
+                            { role: "system", content: "You are SpongeBob SquarePants. Respond in his cheerful, optimistic style using his catchphrases and mannerisms. Keep responses within 1-2 sentences. For every new message, try to start the sentence differently" },
                             { role: "user", content: userMessage }
                         ]
                     })
