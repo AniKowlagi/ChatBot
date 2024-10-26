@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spongebob's ChatBot</title>
@@ -21,13 +22,14 @@
             position: relative;
             overflow-x: hidden;
         }
-
+        
+        /*Bubble visuals */
         @keyframes floatingBubbles {
             0% { transform: translateY(0) rotate(0deg); opacity: 0; }
             50% { opacity: 0.8; }
             100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
         }
-
+        /*Bubble styling */
         .bubble {
             position: fixed;
             background: rgba(255, 255, 255, 0.3);
@@ -52,7 +54,7 @@
             margin-bottom: 30px;
             font-weight: bold;
         }
-
+        /*The texting interface for the chatbot */
         .chat-interface {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -94,12 +96,14 @@
             color: #e65100;
         }
 
+        /*text input container */
         .input-container {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
 
+        /*voice input container */
         .voice-input-container {
             display: flex;
             gap: 10px;
@@ -128,6 +132,7 @@
             animation: pulse 1.5s infinite;
         }
 
+        /*sizes change based on if voice is being recorded or not */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -229,24 +234,26 @@
     <div id="bubbles"></div>
     <div class="sand"></div>
     <div class="spongebob-container">
-        <img id="spongebob-image" src="path/to/your/spongebob1.jpg" alt="SpongeBob">
+        <img id="spongebob-image" src="1.jpg" alt="SpongeBob">
     </div>
 
     <div class="container">
         <div class="title">
+             <!--Logo for spongebob at the top of teh screen-->
             <img id="logo" width="300px" height="300px" src="[CITYPNG.COM]Spongebob Squarepants Official Logo PNG - 2000x2000.png" alt="SpongeBob SquarePants">
             <h2>Bikini Bottom Chatbot</h2>
         </div>
 
         <div class="chat-interface">
             <div class="input-container">
-                <input type="password" id="api-key-input" placeholder="Enter your GROQ API key">
+                <!--Input for the API key-->
+                <input type="password" id="api-key-input" placeholder="Enter your GROQ API key"> 
                 <button id="test-api-key">Test API Key</button>
             </div>
 
             <div id="chat-messages"></div>
             
-            <div class="loading" id="loading">Swimming to get your response...</div>
+            <div class="loading" id="loading">Let me fetch your response...</div>
 
             <div class="voice-input-container">
                 <button id="record-button" class="record-button">🎤</button>
@@ -254,13 +261,15 @@
             </div>
 
             <div class="input-container">
-                <input type="text" id="message-input" placeholder="Type your message...">
+                <input type="text" id="message-input" placeholder="Type a message...">
                 <button id="send-button">Send</button>
             </div>
         </div>
     </div>
 
     <script>
+
+        /*creation and display of the bubbles that was previously implemented */
         function createBubbles() {
             const bubblesContainer = document.getElementById('bubbles');
             const numberOfBubbles = 50;
@@ -283,8 +292,10 @@
                 bubblesContainer.appendChild(bubble);
             }
         }
+        /* essentailly starts for the recording*/
         setupVoiceRecording();
         
+        /* gets the data from the said elements*/
         const chatMessages = document.getElementById('chat-messages');
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
@@ -292,6 +303,7 @@
         const testApiKeyButton = document.getElementById('test-api-key');
         const loadingIndicator = document.getElementById('loading');
 
+        /* randomly picks from these array of spongebob characters*/
         const spongebobImages = [
             '1.png',
             '2.jpg',
@@ -305,6 +317,7 @@
         const recordButton = document.getElementById('record-button');
         const recordStatus = document.getElementById('record-status');
 
+        /* the function that calls for the changing of the image*/
         function changeSpongeBobImage() {
             const img = document.getElementById('spongebob-image');
             const randomIndex = Math.floor(Math.random() * spongebobImages.length);
@@ -339,6 +352,7 @@
             messageInput.value = '';
             loadingIndicator.style.display = 'block';
 
+            /* reaches out to the API and authorization */
             try {
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
@@ -366,7 +380,7 @@
                     addMessageToChat('ai', 'Sorry, there was an error processing your request.');
                 }
             } catch (error) {
-                console.error('Error during message send:', error);
+                console.error('Error during message send:', error); /*debugging purposes*/
                 addMessageToChat('ai', 'Sorry, there was an error sending your message.');
             } finally {
                 loadingIndicator.style.display = 'none';
@@ -396,7 +410,7 @@
         async function processAudio(audioBlob) {
             const apiKey = apiKeyInput.value.trim();
             if (!apiKey) {
-                alert('Please enter your API key.');
+                alert('Please enter your API key.'); /*asks for api key if you try to use the voice implementation without first entering the key*/
                 return;
             }
 
@@ -405,7 +419,7 @@
             try {
                 const formData = new FormData();
                 formData.append('file', audioBlob, 'audio.wav');
-                formData.append('model', 'distil-whisper-large-v3-en');
+                formData.append('model', 'distil-whisper-large-v3-en'); /*The Groq model to be accessed*/
 
                 const transcriptionResponse = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
                     method: 'POST',
@@ -429,6 +443,7 @@
             }
         }
 
+        /*recording click listener*/
         recordButton.addEventListener('click', () => {
             if (!isRecording) {
                 audioChunks = [];
@@ -471,15 +486,15 @@
                 console.log("API key test response status:", response.status); /*debugging lol*/
 
                 if (response.ok) {
-                    alert('API key is valid!');
+                    alert('API key is valid!'); /*API KEY WORKS!!!*/
                 } else {
                     const errorData = await response.json();
-                    console.error('API key error:', errorData);
-                    alert('Invalid API key.');
+                    console.error('API key error:', errorData); /*if API error*/
+                    alert('Invalid API key.'); /*if API key doesn't exist*/
                 }
             } catch (error) {
                 console.error('Error testing API key:', error);
-                alert('Error testing API key.');
+                alert('Error testing API key.'); 
             }
         });
     </script>
