@@ -419,9 +419,9 @@
                     const transcriptionData = await transcriptionResponse.json();
                     const transcribedText = transcriptionData.text;
                     messageInput.value = transcribedText;
-                    recordStatus.textContent = 'Transcribed! Send your message.';
+                    recordStatus.textContent = 'Voice Input recorded! Send your message.';
                 } else {
-                    throw new Error('Transcription failed');
+                    throw new Error('Voice Input failed');
                 }
             } catch (error) {
                 console.error('Error processing audio:', error);
@@ -435,12 +435,12 @@
                 mediaRecorder.start();
                 isRecording = true;
                 recordButton.classList.add('recording');
-                recordStatus.textContent = 'Recording... Click to stop';
+                recordStatus.textContent = 'Recording... Click to cancel';
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
                 recordButton.classList.remove('recording');
-                recordStatus.textContent = 'Processing...';
+                recordStatus.textContent = 'Please wait...';
             }
         });
 
